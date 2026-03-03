@@ -9,6 +9,13 @@ module top #(
     output      dout
 );
 
+    `define MAX_VAL 32'h7FFFFFFF
+    `define MIN_VAL 32'h80000000
+    // `define MAX_VAL 32'hFFFFFFFF
+    // `define MIN_VAL 32'h00000000
+    // `define MAX_VAL 32'b11111111_11111111_11111111_11111111
+    // `define MIN_VAL 32'b00000000_00000000_00000000_00000000
+
     // ---- PLL, 27Mhz -> 180Mhz
     //
     // Generated using the commands:
@@ -42,28 +49,36 @@ module top #(
         .sync_tick(sys_sync_tick)
     );
 
+    reg sync_tick_reg;
     reg sync_tick_delayed;
     reg [7:0] sample_cnt;
 
     always @ (posedge sys_clk) begin
         if (btn) begin
             sample_cnt <= 0;
-            data_l <= 32'h0000_0000;
-            data_r <= 32'h0000_0000;
+            data_l <= `MIN_VAL;
+            data_r <= `MIN_VAL;
             sync_tick_delayed <= 0;
+            sync_tick_reg <= 0;
+            
         end
         else begin
-            // 1-cycle delayed
-            sync_tick_delayed <= sys_sync_tick;
-            // rising edge detection
-            if (sys_sync_tick && !sync_tick_delayed) begin
-                if (sample_cnt < 200 - 1) begin
+            // if both words transmitted
+            if (sys_sync_tick) begin
+                if (sample_cnt < 100 - 1) begin
                     sample_cnt <= sample_cnt + 1;
                 end
                 else begin
                     // every few sync_ticks flip all bits
-                    data_l <= data_l ^ 32'hFFFF_FFFF;
-                    data_r <= data_r ^ 32'hFFFF_FFFF;
+                    if (data_l == `MIN_VAL) begin
+                        data_l <= `MAX_VAL;
+                        data_r <= `MAX_VAL;
+                    end
+                    else begin
+                        data_l <= `MIN_VAL;
+                        data_r <= `MIN_VAL;
+                    end
+                    
                     sample_cnt <= 0;
                 end
             end
