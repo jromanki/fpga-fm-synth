@@ -26,9 +26,9 @@ module pll(
     
     rPLL #(
         .FCLKIN("27"),
-        .IDIV_SEL(2), // -> PFD = 3.375 MHz (range: 3-500 MHz)
-        .FBDIV_SEL(0), // -> CLKOUT = 16.875 MHz (range: 3.90625-625 MHz)
-        .ODIV_SEL(64) // -> VCO = 540.0 MHz (range: 500-1250 MHz)
+        .IDIV_SEL(7), // -> PFD = 3.375 MHz (range: 3-500 MHz)
+        .FBDIV_SEL(4), // -> CLKOUT = 16.875 MHz (range: 3.90625-625 MHz)
+        .ODIV_SEL(32) // -> VCO = 540.0 MHz (range: 500-1250 MHz)
     ) pll (
         .CLKOUTP(),
         .CLKOUTD(), 

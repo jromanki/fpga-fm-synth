@@ -1,9 +1,10 @@
 module top #(
     // Num of click cycle per led toggle.
-    parameter integer DIV = 100
+    parameter integer DIV = 200
 ) (
     input       ext_clk,
     input       btn,
+    output      sck,
     output      bck,
     output      lrck,
     output      dout
@@ -65,7 +66,7 @@ module top #(
         else begin
             // if both words transmitted
             if (sys_sync_tick) begin
-                if (sample_cnt < 100 - 1) begin
+                if (sample_cnt < DIV - 1) begin
                     sample_cnt <= sample_cnt + 1;
                 end
                 else begin
@@ -85,6 +86,7 @@ module top #(
         end
     end
 
+    assign sck = sys_clk;
     assign bck = sys_bck;
     assign lrck = sys_lrck;
     assign dout = sys_dout;

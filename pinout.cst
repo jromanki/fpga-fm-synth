@@ -9,10 +9,13 @@ IO_PORT "ext_clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE;
 IO_LOC "bck"        71;
 IO_PORT "bck" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
+IO_LOC "sck"        72;
+IO_PORT "sck" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
 IO_LOC "lrck"        77;
 IO_PORT "lrck" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
-IO_LOC "dout"        72;
+IO_LOC "dout"        75;
 IO_PORT "dout" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
 IO_LOC "btn" 88;
