@@ -6,7 +6,7 @@ DEBUG = False
 FILENAME = "wave-rom.vh"
 LINES = 64
 BITS_IN_LINE = 256
-BIT_DEPTH = 16
+BIT_DEPTH = 32
 
 TOTAL_SAMPLE_NUM = int(LINES * (BITS_IN_LINE / BIT_DEPTH))
 
@@ -14,7 +14,7 @@ def gen_sine_samples():
     samples = np.zeros(TOTAL_SAMPLE_NUM, dtype=object)
 
     for sample_num in range(TOTAL_SAMPLE_NUM):
-        samples[sample_num] = np.sin(2 * np.pi * sample_num / TOTAL_SAMPLE_NUM)
+        samples[sample_num] = np.sin(np.pi / 2 * sample_num / TOTAL_SAMPLE_NUM)
 
     if DEBUG:
         xpoints = range(0, TOTAL_SAMPLE_NUM)
@@ -29,11 +29,11 @@ def int_to_2s_comp_str(num):
     return f"{temp:0{BIT_DEPTH}b}"
 
 def samples_float_to_2s_comp_str(samples):
-    max_val = 2**BIT_DEPTH / 2
+    max_val = (2**(BIT_DEPTH - 1)) - 1
 
     for sample_num in range(TOTAL_SAMPLE_NUM):
         sample = samples[sample_num]
-        sample = int(sample * max_val)
+        sample = int(round(sample * max_val))
         sample = int_to_2s_comp_str(sample)
         samples[sample_num] = sample
     

@@ -51,8 +51,8 @@ module top #(
     );
 
     reg sync_tick_reg;
-    reg sync_tick_delayed;
-    reg [8:0] sample_cnt;
+    reg [10:0] sync_tick_delayed;
+    reg [10:0] sample_cnt;
 
     always @ (posedge sys_clk) begin
         if (btn) begin
@@ -66,22 +66,21 @@ module top #(
         else begin
             // if both words transmitted
             if (sys_sync_tick) begin
-                data_l <= prom_data;
-                data_r <= prom_data;
+                data_l <= sample;
+                data_r <= sample;
                 sample_cnt <= sample_cnt + 1;
             end
         end
     end
 
-    wire [31:0] prom_data;
+    wire [31:0] sample;
 
-    wave_rom wave(
+    sine_lookup sine_lookup(
         .clk(sys_clk),
-        .reset(btn),
-        .ad(sample_cnt),
-        .data(prom_data)
-    );	
-
+        .rst(btn),
+        .addr(sample_cnt),
+        .value(sample)
+    );
 
     assign sck = sys_clk;
     assign bck = sys_bck;
