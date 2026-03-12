@@ -56,9 +56,9 @@ module i2s_transmit # (
                     right_done <= 0;
                 end
 
-                // if (div_3_counter < 3 - 1) begin
-                /* make bck last 2*2 sys_clk cycles */
-                if (div_3_counter < 2 - 1) begin
+                // if (div_3_counter < 2 - 1) begin
+                /* make bck last 4*2 sys_clk cycles */
+                if (div_3_counter < 4 - 1) begin
                     div_3_counter <= div_3_counter + 1;
 
                 end

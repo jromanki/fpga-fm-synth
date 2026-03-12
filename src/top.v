@@ -49,7 +49,7 @@ module top #(
 
     reg sync_tick_last;
     reg dac_ready;
-    reg [10:0] sample_cnt;
+    reg [11:0] sample_cnt;
 
     always @ (posedge sys_clk) begin
 
@@ -87,6 +87,6 @@ module top #(
     assign lrck = sys_lrck;
     assign dout = sys_dout;
 
-    assign test_1 = dac_ready;
+    // assign test_1 = dac_ready;
 
 endmodule
