@@ -1,33 +1,38 @@
-// module sine_lookup(
-//     input clk,
-//     input rst,
-//     input load_tick,
-//     input [31:0] phase_inc,
-//     output wire [31:0] value
-// );
+module sine_dds(
+    input clk,
+    input rst,
+    input tick,
+    input [31:0] phase_inc,
+    output wire [31:0] value
+);
 
-//     sine_dds sine_dds(
-//         .clk(sys_clk),
-//         .rst(btn),
-//         .addr(sample_cnt),
-//         .value(sample)
-//     );
+    reg [11:0] sample_num;
+    reg [31:0] phase_acc;
 
-//     reg phase_acc[31:0]
+    wire [31:0] sample_out;
 
+    always @ (posedge clk) begin
 
-//     always @ (posedge clk) begin
+        if (rst) begin
+            phase_acc <= 0;
+            sample_num <= 0;
+        end
+        else begin
+            phase_acc <= phase_acc + phase_inc;
 
-//         if (btn) begin
-//             phase_acc <= 0;
-//         end
-//         else begin
-//             if (tick) begin
-//                 data_l <= sample;
-//                 data_r <= sample;
-//                 sample_cnt <= sample_cnt + 1;
-//             end
-//         end
-//     end
+            if (tick) begin    
+                sample_num <= phase_acc[31:20];
+            end
+        end
+    end
 
-// endmodule
+    sine_lookup sine_lookup(
+        .clk(clk),
+        .rst(rst),
+        .addr(sample_num),
+        .value(sample_out)
+    );
+
+    assign value = sample_out;
+
+endmodule

@@ -4,6 +4,7 @@ module top #(
 ) (
     input       ext_clk,
     input       btn,
+    input       btn2,
     output      sck,
     output      bck,
     output      lrck,
@@ -34,6 +35,7 @@ module top #(
     wire sys_bck;
     reg [31:0] data_l;
     reg [31:0] data_r;
+    reg [31:0] sys_phase_inc;
 
     i2s_transmit i2s (
         .clk(sys_clk),
@@ -63,24 +65,32 @@ module top #(
             dac_ready <= 0;
         end
         else begin
+            if (btn2) begin
+                sys_phase_inc = 41995;
+            end
+            else begin
+                sys_phase_inc = 20998;
+            end
+
             /* if both words have been transmitted dac_ready = 1
                 for 1 sys_clk cycle */
             if (dac_ready) begin
                 data_l <= sample;
                 data_r <= sample;
-                sample_cnt <= sample_cnt + 1;
             end
         end
     end
 
     wire [31:0] sample;
 
-    sine_lookup sine_lookup(
+    sine_dds sine_dds(
         .clk(sys_clk),
         .rst(btn),
-        .addr(sample_cnt),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc),
         .value(sample)
     );
+
 
     assign sck = sys_clk;
     assign bck = sys_bck;
