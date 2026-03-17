@@ -1,0 +1,20 @@
+{  
+  "version": "0.2.0",  
+  "configurations": [  
+    {  
+      "name": "STM32 Debug",  
+      "type": "cortex-debug",  
+      "request": "launch",  
+      "cwd": "${workspaceFolder}",  
+      "executable": "./build/${workspaceFolderBasename}.elf",  // Path to .elf file  
+      "servertype": "openocd",  
+      "device": "STM32F411CEU6",  // Replace with your MCU (e.g., "STM32F103C8")  
+      "configFiles": [  
+        "interface/stlink.cfg",  // ST-Link debugger config  
+        "target/stm32f4x.cfg"   // Target MCU config (e.g., "stm32f1x.cfg" for F1 series)  
+      ],  
+      "svdFile": "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Include/STM32F401.svd",  // Optional: for peripheral register debugging  
+      "runToMain": true  // Start debugging at main()  
+    }  
+  ]  
+} 
