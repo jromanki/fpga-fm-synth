@@ -45,7 +45,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+extern SPI_HandleTypeDef hspi3;
 /* USER CODE END Variables */
 /* Definitions for blink01 */
 osThreadId_t blink01Handle;
@@ -54,6 +54,13 @@ const osThreadAttr_t blink01_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for transmit_spi */
+osThreadId_t transmit_spiHandle;
+const osThreadAttr_t transmit_spi_attributes = {
+  .name = "transmit_spi",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -61,6 +68,7 @@ const osThreadAttr_t blink01_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void start_blink_01(void *argument);
+void transmit_spi_01(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -94,6 +102,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of blink01 */
   blink01Handle = osThreadNew(start_blink_01, NULL, &blink01_attributes);
 
+  /* creation of transmit_spi */
+  transmit_spiHandle = osThreadNew(transmit_spi_01, NULL, &transmit_spi_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -121,6 +132,26 @@ void start_blink_01(void *argument)
     osDelay(500);
   }
   /* USER CODE END start_blink_01 */
+}
+
+/* USER CODE BEGIN Header_transmit_spi_01 */
+/**
+* @brief Function implementing the transmit_spi thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_transmit_spi_01 */
+void transmit_spi_01(void *argument)
+{
+  /* USER CODE BEGIN transmit_spi_01 */
+  char a = 'A';
+
+  /* Infinite loop */
+  for(;;)
+  {
+    HAL_SPI_Transmit(&hspi3, (uint8_t *) &a, 1, 100);
+  }
+  /* USER CODE END transmit_spi_01 */
 }
 
 /* Private application code --------------------------------------------------*/
