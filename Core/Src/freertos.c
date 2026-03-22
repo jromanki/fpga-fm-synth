@@ -61,6 +61,18 @@ const osThreadAttr_t transmit_spi_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for process_midi */
+osThreadId_t process_midiHandle;
+const osThreadAttr_t process_midi_attributes = {
+  .name = "process_midi",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for midi_queue */
+osMessageQueueId_t midi_queueHandle;
+const osMessageQueueAttr_t midi_queue_attributes = {
+  .name = "midi_queue"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -69,6 +81,7 @@ const osThreadAttr_t transmit_spi_attributes = {
 
 void start_blink_01(void *argument);
 void transmit_spi_01(void *argument);
+void process_midi_from_queue(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -94,6 +107,10 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* creation of midi_queue */
+  midi_queueHandle = osMessageQueueNew (32, sizeof(uint8_t), &midi_queue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -104,6 +121,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of transmit_spi */
   transmit_spiHandle = osThreadNew(transmit_spi_01, NULL, &transmit_spi_attributes);
+
+  /* creation of process_midi */
+  process_midiHandle = osThreadNew(process_midi_from_queue, NULL, &process_midi_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -128,7 +148,7 @@ void start_blink_01(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+    // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
     osDelay(500);
   }
   /* USER CODE END start_blink_01 */
@@ -152,6 +172,24 @@ void transmit_spi_01(void *argument)
     HAL_SPI_Transmit(&hspi3, (uint8_t *) &a, 1, 100);
   }
   /* USER CODE END transmit_spi_01 */
+}
+
+/* USER CODE BEGIN Header_process_midi_from_queue */
+/**
+* @brief Function implementing the process_midi thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_process_midi_from_queue */
+void process_midi_from_queue(void *argument)
+{
+  /* USER CODE BEGIN process_midi_from_queue */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END process_midi_from_queue */
 }
 
 /* Private application code --------------------------------------------------*/
