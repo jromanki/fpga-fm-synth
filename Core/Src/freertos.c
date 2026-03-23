@@ -25,10 +25,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+extern osMessageQueueId_t midi_queueHandle;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
+typedef StaticQueue_t osStaticMessageQDef_t;
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -70,8 +71,14 @@ const osThreadAttr_t process_midi_attributes = {
 };
 /* Definitions for midi_queue */
 osMessageQueueId_t midi_queueHandle;
+uint8_t midi_queueBuffer[ 32 * sizeof( uint8_t ) ];
+osStaticMessageQDef_t midi_queueControlBlock;
 const osMessageQueueAttr_t midi_queue_attributes = {
-  .name = "midi_queue"
+  .name = "midi_queue",
+  .cb_mem = &midi_queueControlBlock,
+  .cb_size = sizeof(midi_queueControlBlock),
+  .mq_mem = &midi_queueBuffer,
+  .mq_size = sizeof(midi_queueBuffer)
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -184,10 +191,14 @@ void transmit_spi_01(void *argument)
 void process_midi_from_queue(void *argument)
 {
   /* USER CODE BEGIN process_midi_from_queue */
+  uint8_t rcv_msg = 0;
+
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    if (osMessageQueueGet(midi_queueHandle, (void *)&rcv_msg, NULL, 10) == osOK) {
+      osDelay(1);
+    }
   }
   /* USER CODE END process_midi_from_queue */
 }
