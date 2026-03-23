@@ -22,6 +22,7 @@
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
+#include "midi.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -197,7 +198,7 @@ void process_midi_from_queue(void *argument)
   for(;;)
   {
     if (osMessageQueueGet(midi_queueHandle, (void *)&rcv_msg, NULL, 10) == osOK) {
-      osDelay(1);
+      process_midi(rcv_msg);
     }
   }
   /* USER CODE END process_midi_from_queue */

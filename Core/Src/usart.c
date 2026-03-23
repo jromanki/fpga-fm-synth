@@ -23,7 +23,7 @@
 /* USER CODE BEGIN 0 */
 #include "cmsis_os2.h"
 
-extern uint8_t rx_buffer[1];
+extern uint8_t rx_buffer;
 extern osMessageQueueId_t midi_queueHandle;
 /* USER CODE END 0 */
 
@@ -120,12 +120,12 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 /* USER CODE BEGIN 1 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    uint8_t msg = rx_buffer[0];
-    if (msg != 0x00){
+    uint8_t msg = rx_buffer;
+    if (msg != 0xFE){
       // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
       osMessageQueuePut(midi_queueHandle, &msg, 0, 0);
     }
-    HAL_UART_Receive_IT(&huart2, rx_buffer, 1);
+    HAL_UART_Receive_IT(&huart2, &rx_buffer, 1);
 }
 /* USER CODE END 1 */
 

@@ -1,6 +1,8 @@
 #ifndef __MIDI_H__
 #define __MIDI_H__
 
+#include <stdint.h>
+
 #define STATUS_BIT_MASK                     0x80
 #define STATUS_BIT_POS                      7
 
@@ -19,8 +21,12 @@
 #define SYS_MSG                             7
 
 /* FOR DATA BYTES */
-#define DATA_BIT_MASK 0x7F
+#define DATA_BIT_MASK                       0x7F
+
+#define MY_CHANNEL                             0
 
 #define HAS_STATUS_BIT(byte) ((byte & STATUS_BIT_MASK) != 0)
+
+void process_midi(uint8_t rcv_msg);
 
 #endif

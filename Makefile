@@ -73,7 +73,8 @@ Core/Src/syscalls.c \
 Core/Src/spi.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
 Core/Src/usart.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
+Core/Src/midi.c
 
 # ASM sources
 ASM_SOURCES =  \

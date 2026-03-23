@@ -46,7 +46,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-  uint8_t rx_buffer[1] = {0};
+  uint8_t rx_buffer;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,7 +94,7 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   /* start receiving interrupts */
-  HAL_UART_Receive_IT (&huart2, rx_buffer, 1);
+  HAL_UART_Receive_IT (&huart2, &rx_buffer, 1);
 
   /* USER CODE END 2 */
 
