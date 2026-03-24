@@ -22,16 +22,21 @@
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
-#include "midi.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-extern osMessageQueueId_t midi_queueHandle;
+#include "midi.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 typedef StaticQueue_t osStaticMessageQDef_t;
 /* USER CODE BEGIN PTD */
+
+struct out_spi_msg_t{
+  uint8_t packets[5];
+  uint8_t target_osc;
+  uint8_t msg_type;
+};
 
 /* USER CODE END PTD */
 
@@ -47,7 +52,9 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-extern SPI_HandleTypeDef hspi3;
+extern SPI_HandleTypeDef hspi1;
+extern osMessageQueueId_t midi_queueHandle;
+
 /* USER CODE END Variables */
 /* Definitions for blink01 */
 osThreadId_t blink01Handle;
@@ -81,10 +88,21 @@ const osMessageQueueAttr_t midi_queue_attributes = {
   .mq_mem = &midi_queueBuffer,
   .mq_size = sizeof(midi_queueBuffer)
 };
+/* Definitions for to_send_queue */
+osMessageQueueId_t to_send_queueHandle;
+uint8_t to_send_queueBuffer[ 16 * sizeof( uint32_t ) ];
+osStaticMessageQDef_t to_send_queueControlBlock;
+const osMessageQueueAttr_t to_send_queue_attributes = {
+  .name = "to_send_queue",
+  .cb_mem = &to_send_queueControlBlock,
+  .cb_size = sizeof(to_send_queueControlBlock),
+  .mq_mem = &to_send_queueBuffer,
+  .mq_size = sizeof(to_send_queueBuffer)
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
+static void assemble_spi_packets(uint32_t data_in, struct out_spi_msg_t* msg);
 /* USER CODE END FunctionPrototypes */
 
 void start_blink_01(void *argument);
@@ -118,6 +136,9 @@ void MX_FREERTOS_Init(void) {
   /* Create the queue(s) */
   /* creation of midi_queue */
   midi_queueHandle = osMessageQueueNew (32, sizeof(uint8_t), &midi_queue_attributes);
+
+  /* creation of to_send_queue */
+  to_send_queueHandle = osMessageQueueNew (16, sizeof(uint32_t), &to_send_queue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -172,12 +193,18 @@ void start_blink_01(void *argument)
 void transmit_spi_01(void *argument)
 {
   /* USER CODE BEGIN transmit_spi_01 */
-  char a = 'A';
+  uint32_t data_to_tx;
+  static struct out_spi_msg_t msg;
 
   /* Infinite loop */
   for(;;)
   {
-    HAL_SPI_Transmit(&hspi3, (uint8_t *) &a, 1, 100);
+    if (osMessageQueueGet(to_send_queueHandle, (void *)&data_to_tx, NULL, 10) == osOK) {
+      msg.msg_type = 1;
+      msg.target_osc = 2;
+      assemble_spi_packets(data_to_tx, &msg);
+      HAL_SPI_Transmit_DMA(&hspi1, msg.packets, 6);
+    }
   }
   /* USER CODE END transmit_spi_01 */
 }
@@ -206,6 +233,15 @@ void process_midi_from_queue(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+static void assemble_spi_packets(uint32_t data_in, struct out_spi_msg_t* msg)
+{
+  // msg->packets[0] = 0x00 | (msg->msg_type << 4) | (msg->target_osc);
+  msg->packets[0] = 0x00;
 
+  /* Shift out uint32_t by 8 bit frames MSB first */
+  for (int i = 0; i < 4; i++){
+    msg->packets[i + 1] = (data_in >> (8 * (3 - i))) & 0xFF;
+  }
+}
 /* USER CODE END Application */
 
