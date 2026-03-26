@@ -38,6 +38,8 @@ struct out_spi_msg_t{
   uint8_t msg_type;
 };
 
+uint8_t note_was_pressed_lately = 0;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -177,8 +179,8 @@ void start_blink_01(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-    osDelay(500);
+    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+    osDelay(100);
   }
   /* USER CODE END start_blink_01 */
 }
@@ -203,6 +205,7 @@ void transmit_spi_01(void *argument)
       msg.msg_type = 1;
       msg.target_osc = 2;
       assemble_spi_packets(data_to_tx, &msg);
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 0);
       HAL_SPI_Transmit_DMA(&hspi1, msg.packets, 6);
     }
   }
@@ -225,6 +228,7 @@ void process_midi_from_queue(void *argument)
   for(;;)
   {
     if (osMessageQueueGet(midi_queueHandle, (void *)&rcv_msg, NULL, 10) == osOK) {
+
       process_midi(rcv_msg);
     }
   }
