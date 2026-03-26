@@ -38,7 +38,8 @@ struct out_spi_msg_t{
   uint8_t msg_type;
 };
 
-uint8_t note_was_pressed_lately = 0;
+volatile uint8_t note_pressed_recently = 0;
+volatile uint8_t note_led_waiting = 0;
 
 /* USER CODE END PTD */
 
@@ -179,8 +180,18 @@ void start_blink_01(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-    osDelay(100);
+    if (note_pressed_recently){
+      note_pressed_recently = 0;
+      note_led_waiting = 1;
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
+      osDelay(50);
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
+      note_led_waiting = 1;
+    }
+    if (note_led_waiting == 0){
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
+    }
+    osDelay(1);
   }
   /* USER CODE END start_blink_01 */
 }
@@ -206,7 +217,7 @@ void transmit_spi_01(void *argument)
       msg.target_osc = 2;
       assemble_spi_packets(data_to_tx, &msg);
       HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 0);
-      HAL_SPI_Transmit_DMA(&hspi1, msg.packets, 6);
+      HAL_SPI_Transmit_DMA(&hspi1, msg.packets, 5);
     }
   }
   /* USER CODE END transmit_spi_01 */
@@ -228,7 +239,7 @@ void process_midi_from_queue(void *argument)
   for(;;)
   {
     if (osMessageQueueGet(midi_queueHandle, (void *)&rcv_msg, NULL, 10) == osOK) {
-
+      note_pressed_recently = 1;
       process_midi(rcv_msg);
     }
   }
