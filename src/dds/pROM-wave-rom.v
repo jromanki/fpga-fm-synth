@@ -16,7 +16,7 @@ module wave_rom(
     end
 
     initial begin
-        $readmemh("wave-rom.hex", rom);
+        $readmemh("src/dds/wave-rom.hex", rom);
     end
 
 endmodule

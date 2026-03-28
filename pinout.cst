@@ -3,28 +3,42 @@
 
 // See examples here https://github.com/sipeed/TangNano-20K-example
 
-IO_LOC "ext_clk"    4;
+// Outputs
+
+IO_LOC "ext_clk"        4;
 IO_PORT "ext_clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE;
 
-IO_LOC "bck"        30;
+IO_LOC "bck"            30;
 IO_PORT "bck" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
-IO_LOC "sck"        31;
+IO_LOC "sck"            31;
 IO_PORT "sck" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
-IO_LOC "lrck"        26;
+IO_LOC "lrck"           26;
 IO_PORT "lrck" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
-IO_LOC "dout"        29;
+IO_LOC "dout"           29;
 IO_PORT "dout" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
-IO_LOC "test_1"        76;
+IO_LOC "test_1"         76;
 IO_PORT "test_1" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
-IO_LOC "btn" 88;
+// Inputs
+
+IO_LOC "mosi"           86;
+IO_PORT "mosi" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+IO_LOC "scl"            55;
+IO_PORT "scl" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+IO_LOC "cs"             48;
+IO_PORT "cs" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+
+IO_LOC "btn"            88;
 IO_PORT "btn" PULL_MODE=NONE;
 
-IO_LOC "btn2" 87;
+IO_LOC "btn2"           87;
 IO_PORT "btn2" PULL_MODE=NONE;
 
 

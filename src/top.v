@@ -5,6 +5,11 @@ module top #(
     input       ext_clk,
     input       btn,
     input       btn2,
+
+    input       scl,
+	input       mosi,
+	input       cs,
+
     output      sck,
     output      bck,
     output      lrck,
@@ -53,6 +58,13 @@ module top #(
     reg dac_ready;
     reg [11:0] sample_cnt;
 
+    /* simple power on reset */
+    reg [15:0] por_counter = 0;
+    wire auto_rst = !por_counter[15];
+    always @(posedge sys_clk) begin
+        if (auto_rst) por_counter <= por_counter + 1;
+    end
+
     always @ (posedge sys_clk) begin
 
         /* make dac_ready detect rising edge of sync_tick */
@@ -63,14 +75,16 @@ module top #(
             sample_cnt <= 0;
             sync_tick_last <= 0;
             dac_ready <= 0;
+            sys_phase_inc <= 0;
         end
         else begin
-            if (btn2) begin
-                sys_phase_inc = 41995;
+            if (sys_spi_ready) begin
+                // sys_phase_inc <= sys_spi_data;
             end
-            else begin
-                sys_phase_inc = 20998;
+            else if (btn2) begin
+                sys_phase_inc <= 41995;
             end
+
 
             /* if both words have been transmitted dac_ready = 1
                 for 1 sys_clk cycle */
@@ -91,12 +105,24 @@ module top #(
         .value(sample)
     );
 
+    reg [31:0] sys_spi_data;
+    wire sys_spi_ready;
+
+    spi_parser spi_parser(
+        .clk(sys_clk),
+        .rst(btn | auto_rst),
+        .scl(scl),
+        .mosi(mosi),
+        .cs(cs),
+        .data_ready(sys_spi_ready),
+        .data_out(sys_spi_data)
+    );
 
     assign sck = sys_clk;
     assign bck = sys_bck;
     assign lrck = sys_lrck;
     assign dout = sys_dout;
 
-    // assign test_1 = dac_ready;
+    assign test_1 = sys_spi_ready;
 
 endmodule
