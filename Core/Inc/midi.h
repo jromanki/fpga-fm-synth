@@ -23,7 +23,7 @@
 /* FOR DATA BYTES */
 #define DATA_BIT_MASK                       0x7F
 
-#define MY_CHANNEL                             0
+#define MY_CHANNEL                          0
 
 #define HAS_STATUS_BIT(byte) ((byte & STATUS_BIT_MASK) != 0)
 

@@ -56,7 +56,6 @@ volatile uint8_t note_led_waiting = 0;
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 extern SPI_HandleTypeDef hspi1;
-extern osMessageQueueId_t midi_queueHandle;
 
 /* USER CODE END Variables */
 /* Definitions for blink01 */
