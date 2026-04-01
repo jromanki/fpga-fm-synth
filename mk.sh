@@ -17,8 +17,9 @@ OUT_DIR=build
 SERIAL_NUM=2025012315
 
 yosys -p "read_verilog $SRC_FILES; synth_gowin -json $OUT_DIR/top-synth.json -family gw2a"
-#yosys  -p "read_verilog pll.v pROM-wave-rom.v sine-lookup.v top.v i2s.v; synth_gowin -vout top-synth.vg -setundef"
 nextpnr-himbaechel -v --debug --json $OUT_DIR/top-synth.json --write $OUT_DIR/top.json --device GW2AR-LV18QN88C8/I7 --vopt family=GW2A-18C --vopt cst=pinout.cst &> /dev/null
-# gowin_pack -d GW2A-18C -o $OUT_DIR/top.fs $OUT_DIR/top.json &> /dev/null
-openFPGALoader --ftdi-serial $SERIAL_NUM -f $OUT_DIR/top.fs
+gowin_pack -d GW2A-18C -o $OUT_DIR/top.fs $OUT_DIR/top.json &> /dev/null
+
+
+# openFPGALoader --ftdi-serial $SERIAL_NUM -f $OUT_DIR/top.fs
 openFPGALoader --ftdi-serial $SERIAL_NUM $OUT_DIR/top.fs

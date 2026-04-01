@@ -144,9 +144,9 @@ module top #(
     assign lrck = sys_lrck;
     assign dout = sys_dout;
 
-    assign led[5] = led_on;
-    assign led[4:0] = 5'b00000;
+    assign led[5] = ~led_on;
+    assign led[4:0] = 5'b11111;
 
-    assign test_1 = sys_spi_ready;
+    assign test_1 = note_msg_ready;
 
 endmodule
