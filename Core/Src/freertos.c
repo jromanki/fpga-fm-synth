@@ -92,7 +92,7 @@ const osMessageQueueAttr_t midi_queue_attributes = {
 };
 /* Definitions for to_send_queue */
 osMessageQueueId_t to_send_queueHandle;
-uint8_t to_send_queueBuffer[ 16 * sizeof( uint32_t ) ];
+uint8_t to_send_queueBuffer[ 16 * sizeof( fpga_msg_t ) ];
 osStaticMessageQDef_t to_send_queueControlBlock;
 const osMessageQueueAttr_t to_send_queue_attributes = {
   .name = "to_send_queue",
@@ -104,7 +104,7 @@ const osMessageQueueAttr_t to_send_queue_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-static void assemble_spi_packets(uint32_t data_in, struct out_spi_msg_t* msg);
+static void assemble_spi_frames(fpga_msg_t* fpga_msg, uint8_t* frames);
 /* USER CODE END FunctionPrototypes */
 
 void start_blink_01(void *argument);
@@ -140,7 +140,7 @@ void MX_FREERTOS_Init(void) {
   midi_queueHandle = osMessageQueueNew (32, sizeof(uint8_t), &midi_queue_attributes);
 
   /* creation of to_send_queue */
-  to_send_queueHandle = osMessageQueueNew (16, sizeof(uint32_t), &to_send_queue_attributes);
+  to_send_queueHandle = osMessageQueueNew (16, sizeof(fpga_msg_t), &to_send_queue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -183,7 +183,7 @@ void start_blink_01(void *argument)
       note_pressed_recently = 0;
       note_led_waiting = 1;
       HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
-      osDelay(50);
+      osDelay(20);
       HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
       note_led_waiting = 1;
     }
@@ -205,18 +205,25 @@ void start_blink_01(void *argument)
 void transmit_spi_01(void *argument)
 {
   /* USER CODE BEGIN transmit_spi_01 */
-  uint32_t data_to_tx;
-  static struct out_spi_msg_t msg;
+  fpga_msg_t fpga_msg;
+  uint8_t frames[5];
 
   /* Infinite loop */
   for(;;)
   {
-    if (osMessageQueueGet(to_send_queueHandle, (void *)&data_to_tx, NULL, 10) == osOK) {
-      msg.msg_type = 1;
-      msg.target_osc = 2;
-      assemble_spi_packets(data_to_tx, &msg);
+    if (osMessageQueueGet(to_send_queueHandle, (void *)&fpga_msg, NULL, 10) == osOK) {
+
+      /* Prepare message to be transmitted */
+      assemble_spi_frames(&fpga_msg, frames);
+
+      /* Pull CS line low*/
       HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 0);
-      HAL_SPI_Transmit_DMA(&hspi1, msg.packets, 5);
+
+      /* Transmit SPI with DMA */
+      HAL_SPI_Transmit_DMA(&hspi1, frames, 5);
+
+      /* Notify with led */
+      note_pressed_recently = 1;
     }
   }
   /* USER CODE END transmit_spi_01 */
@@ -238,7 +245,6 @@ void process_midi_from_queue(void *argument)
   for(;;)
   {
     if (osMessageQueueGet(midi_queueHandle, (void *)&rcv_msg, NULL, 10) == osOK) {
-      note_pressed_recently = 1;
       process_midi(rcv_msg);
     }
   }
@@ -247,14 +253,13 @@ void process_midi_from_queue(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-static void assemble_spi_packets(uint32_t data_in, struct out_spi_msg_t* msg)
+static void assemble_spi_frames(fpga_msg_t* fpga_msg, uint8_t* frames)
 {
-  // msg->packets[0] = 0x00 | (msg->msg_type << 4) | (msg->target_osc);
-  msg->packets[0] = 0x00;
+  frames[0] = 0x00 | (fpga_msg->msg_type << 5) | (fpga_msg->target_osc);
 
   /* Shift out uint32_t by 8 bit frames MSB first */
   for (int i = 0; i < 4; i++){
-    msg->packets[i + 1] = (data_in >> (8 * (3 - i))) & 0xFF;
+    frames[i + 1] = (fpga_msg->data >> (8 * (3 - i))) & 0xFF;
   }
 }
 /* USER CODE END Application */

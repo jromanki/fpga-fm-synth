@@ -27,6 +27,12 @@
 
 #define HAS_STATUS_BIT(byte) ((byte & STATUS_BIT_MASK) != 0)
 
+typedef struct {
+  uint32_t data;
+  uint8_t target_osc;
+  uint8_t msg_type;
+} fpga_msg_t;
+
 void process_midi(uint8_t rcv_msg);
 
 #endif
