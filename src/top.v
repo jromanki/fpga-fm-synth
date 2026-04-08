@@ -137,6 +137,7 @@ module top #(
         .rst(btn | sys_note_reset),
         .tick(sys_sync_tick),
         .phase_inc(sys_phase_inc),
+        .mod_phase_inc(sys_phase_inc),
         .value(sample)
     );
 
@@ -163,8 +164,8 @@ module top #(
     assign lrck = sys_lrck;
     assign dout = sys_dout;
 
-    assign led[5] = ~led_on;
-    assign led[4:0] = 5'b11111;
+    assign led[0] = ~led_on;
+    assign led[5:1] = 5'b11111;
 
     assign test_1 = note_msg_ready;
 
