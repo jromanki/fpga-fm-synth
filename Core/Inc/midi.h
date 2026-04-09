@@ -20,6 +20,9 @@
 #define PITCH_BND_MSG                       6
 #define SYS_MSG                             7
 
+#define CC_MOD_DEPTH                        1
+#define CC_CHAN_VOLUME                      7
+
 /* FOR DATA BYTES */
 #define DATA_BIT_MASK                       0x7F
 
