@@ -43,7 +43,7 @@ module sine_dds(
         .value(mod_sample_out)
     );
 
-    wire signed [31:0] mod_signal = mod_sample_out >>> 22;
+    wire signed [31:0] mod_signal = mod_sample_out >>> 23;
 
     sine_lookup carrier_inst(
         .clk(clk),

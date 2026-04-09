@@ -43,6 +43,7 @@ module top #(
     reg [31:0] data_l;
     reg [31:0] data_r;
     reg [31:0] sys_phase_inc;
+    reg [15:0] volume_mult;
 
     i2s_transmit i2s (
         .clk(sys_clk),
@@ -81,13 +82,14 @@ module top #(
         dac_ready <= (sys_sync_tick && !sync_tick_last);
         note_msg_ready <= sys_spi_ready;
 
-        if (btn) begin
+        if (btn | auto_rst) begin
             sample_cnt <= 0;
             sync_tick_last <= 0;
             dac_ready <= 0;
             sys_phase_inc <= 0;
             led_on <= 0;
             led_timer <= 0;
+            volume_mult <= 16'hFFFF;
         end
         else begin
             if (note_msg_ready) begin
@@ -106,6 +108,13 @@ module top #(
                     led_timer <= 22'h3FFFFF;
                     led_on <= 1;
                 end
+
+                if (sys_spi_msg_type == 3'b111) begin
+                    /* colume change message */
+                    volume_mult <= sys_spi_data[15:0];
+                    led_timer <= 22'h3FFFFF;
+                    led_on <= 1;
+                end
             end
             else if (btn2) begin
                 /* test mode */
@@ -116,8 +125,10 @@ module top #(
             /* if both words have been transmitted dac_ready = 1
                 for 1 sys_clk cycle */
             if (dac_ready) begin
-                data_l <= sample;
-                data_r <= sample;
+                // data_l <= sample;
+                // data_r <= sample;
+                data_l <= final_sample;
+                data_r <= final_sample;
             end
 
             if (led_timer > 0) begin
@@ -131,6 +142,7 @@ module top #(
     end
 
     wire [31:0] sample;
+    wire [31:0] final_sample;
 
     sine_dds sine_dds(
         .clk(sys_clk),
@@ -139,6 +151,13 @@ module top #(
         .phase_inc(sys_phase_inc),
         .mod_phase_inc(sys_phase_inc),
         .value(sample)
+    );
+
+    s32_x_u16_mult volume_mult_inst(
+        .clk(sys_clk),
+        .a(sample),
+        .b(volume_mult),
+        .y(final_sample)
     );
 
     reg [31:0] sys_spi_data;
