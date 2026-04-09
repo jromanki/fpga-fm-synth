@@ -1,9 +1,11 @@
-module sine_dds(
+module voice(
     input clk,
     input rst,
     input tick,
     input [31:0] phase_inc,
     input [31:0] mod_phase_inc,
+    input [6:0] mod_depth,
+    input [15:0] volume_mult,
     output wire [31:0] value
 );
 
@@ -22,6 +24,7 @@ module sine_dds(
         if (rst) begin
             phase_acc <= 0;
             sample_num <= 0;
+            mod_sample_num <= 0;
             mod_phase_acc <= 0;
         end
         else begin
@@ -43,7 +46,7 @@ module sine_dds(
         .value(mod_sample_out)
     );
 
-    wire signed [31:0] mod_signal = mod_sample_out >>> 23;
+    wire signed [38:0] mod_signal = (mod_sample_out * $signed({1'b0, mod_depth})) >>> 26;
 
     sine_lookup carrier_inst(
         .clk(clk),
@@ -52,6 +55,13 @@ module sine_dds(
         .value(sample_out)
     );
 
-    assign value = sample_out;
+    amp amp(
+        .clk(clk),
+        .sample(sample_out),
+        .volume(volume_mult),
+        .sample_out(final_sample_out)
+    );
+
+    assign value = final_sample_out;
 
 endmodule

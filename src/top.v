@@ -43,7 +43,7 @@ module top #(
     reg [31:0] data_l;
     reg [31:0] data_r;
     reg [31:0] sys_phase_inc;
-    reg [15:0] volume_mult;
+    reg [15:0] master_volume_mult;
 
     i2s_transmit i2s (
         .clk(sys_clk),
@@ -56,8 +56,6 @@ module top #(
         .data(sys_dout),
         .sync_tick(sys_sync_tick)
     );
-
-    wire sys_note_reset;
 
     reg sync_tick_last;
     reg dac_ready;
@@ -89,14 +87,16 @@ module top #(
             sys_phase_inc <= 0;
             led_on <= 0;
             led_timer <= 0;
-            volume_mult <= 16'hFFFF;
+            master_volume_mult <= 16'hFFFF;
+            osc1_vol_mult <= 16'hFFFF;
+            osc1_mod_depth <= 7'b0000000;
         end
         else begin
             if (note_msg_ready) begin
                 if (sys_spi_msg_type == 3'b001) begin
                     /* note on message */
                     sys_phase_inc <= sys_spi_data;
-                    sys_note_reset <= 0;
+                    osc1_vol_mult <= 16'hFFFF;
                     led_timer <= 22'h3FFFFF;
                     led_on <= 1;
                 end
@@ -104,14 +104,21 @@ module top #(
                 if (sys_spi_msg_type == 3'b000) begin
                     /* note off message */
                     sys_phase_inc <= 0;
-                    sys_note_reset <= 1;
+                    osc1_vol_mult <= 16'h0000;
                     led_timer <= 22'h3FFFFF;
                     led_on <= 1;
                 end
 
                 if (sys_spi_msg_type == 3'b111) begin
-                    /* colume change message */
-                    volume_mult <= sys_spi_data[15:0];
+                    /* volume change message */
+                    master_volume_mult <= sys_spi_data[15:0];
+                    led_timer <= 22'h3FFFFF;
+                    led_on <= 1;
+                end
+
+                if (sys_spi_msg_type == 3'b010) begin
+                    /* change modulation depth message */
+                    osc1_mod_depth <= sys_spi_data[6:0];
                     led_timer <= 22'h3FFFFF;
                     led_on <= 1;
                 end
@@ -143,20 +150,24 @@ module top #(
 
     wire [31:0] sample;
     wire [31:0] final_sample;
+    reg [15:0] osc1_vol_mult;
+    reg [7:0] osc1_mod_depth;
 
-    sine_dds sine_dds(
+    voice voice1 (
         .clk(sys_clk),
-        .rst(btn | sys_note_reset),
+        .rst(btn),
         .tick(sys_sync_tick),
         .phase_inc(sys_phase_inc),
         .mod_phase_inc(sys_phase_inc),
+        .mod_depth(osc1_mod_depth),
+        .volume_mult(osc1_vol_mult),
         .value(sample)
     );
 
-    s32_x_u16_mult volume_mult_inst(
+    s32_x_u16_mult volume_mult_inst (
         .clk(sys_clk),
         .a(sample),
-        .b(volume_mult),
+        .b(master_volume_mult),
         .y(final_sample)
     );
 
@@ -166,7 +177,7 @@ module top #(
     wire sys_spi_ready;
     reg note_msg_ready;
 
-    spi_parser spi_parser(
+    spi_parser spi_parser (
         .clk(sys_clk),
         .rst(btn | auto_rst),
         .scl(scl),
