@@ -43,7 +43,9 @@ module top #(
     reg [31:0] data_l;
     reg [31:0] data_r;
     reg [31:0] sys_phase_inc;
+    reg [31:0] sys_mod_phase_inc;
     reg [15:0] master_volume_mult;
+    reg [2:0] osc1_mod_freq_mult_setting;
 
     i2s_transmit i2s (
         .clk(sys_clk),
@@ -85,6 +87,7 @@ module top #(
             sync_tick_last <= 0;
             dac_ready <= 0;
             sys_phase_inc <= 0;
+            sys_mod_phase_inc <= 0;
             led_on <= 0;
             led_timer <= 0;
             master_volume_mult <= 16'hFFFF;
@@ -95,8 +98,14 @@ module top #(
             if (note_msg_ready) begin
                 if (sys_spi_msg_type == 3'b001) begin
                     /* note on message */
+                    
+                    /* assign phase incrementation to get correct freq */
                     sys_phase_inc <= sys_spi_data;
+
+                    /* turn on the note sound output */
                     osc1_vol_mult <= 16'hFFFF;
+
+                    /* signalize with led */
                     led_timer <= 22'h3FFFFF;
                     led_on <= 1;
                 end
@@ -104,6 +113,8 @@ module top #(
                 if (sys_spi_msg_type == 3'b000) begin
                     /* note off message */
                     sys_phase_inc <= 0;
+
+                    /* turn off the note sound output */
                     osc1_vol_mult <= 16'h0000;
                     led_timer <= 22'h3FFFFF;
                     led_on <= 1;
@@ -122,11 +133,51 @@ module top #(
                     led_timer <= 22'h3FFFFF;
                     led_on <= 1;
                 end
+
+                if (sys_spi_msg_type == 3'b011) begin
+                    /* change modulation frequency multiplier depth message */
+                    osc1_mod_freq_mult_setting <= sys_spi_data[2:0];
+                    led_timer <= 22'h3FFFFF;
+                    led_on <= 1;
+                end
             end
             else if (btn2) begin
                 /* test mode */
                 sys_phase_inc <= 9544;
             end
+
+            /* assign chosen modulator freq */
+            case(osc1_mod_freq_mult_setting)
+
+                /* x1/2 of the frequency */
+                3'b000 : begin
+                    sys_mod_phase_inc <= sys_phase_inc >> 1;
+                end
+
+                /* x1 of the frequency */
+                3'b001 : begin
+                    sys_mod_phase_inc <= sys_phase_inc;
+                end
+
+                /* x3/2 of the frequency */
+                3'b010 : begin
+                    sys_mod_phase_inc <= sys_phase_inc + (sys_phase_inc >> 1);
+                end
+
+                /* x2 of the frequency */
+                3'b011 : begin
+                    sys_mod_phase_inc <= sys_phase_inc << 1;
+                end
+                
+                /* x3 of the frequency */
+                3'b100 : begin
+                    sys_mod_phase_inc <= sys_phase_inc + (sys_phase_inc << 1);
+                end
+
+                default : begin
+                    sys_mod_phase_inc <= sys_phase_inc;
+                end
+            endcase
 
 
             /* if both words have been transmitted dac_ready = 1
@@ -158,7 +209,7 @@ module top #(
         .rst(btn),
         .tick(sys_sync_tick),
         .phase_inc(sys_phase_inc),
-        .mod_phase_inc(sys_phase_inc),
+        .mod_phase_inc(sys_mod_phase_inc),
         .mod_depth(osc1_mod_depth),
         .volume_mult(osc1_vol_mult),
         .value(sample)
