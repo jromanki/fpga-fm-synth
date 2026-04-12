@@ -22,6 +22,7 @@
 
 #define CC_MOD_DEPTH                        1
 #define CC_CHAN_VOLUME                      7
+#define CC_MOD_FREQ_MULT                    70
 
 /* FOR DATA BYTES */
 #define DATA_BIT_MASK                       0x7F

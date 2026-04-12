@@ -1,5 +1,6 @@
 #include "midi.h"
 #include "cmsis_os.h"
+#include <math.h>
 
 enum msg_state {
     STATE_IDLE,
@@ -27,6 +28,7 @@ static uint8_t choose_target_osc();
 static uint8_t get_channel(uint8_t rcv_msg);
 static uint8_t get_msg_kind(uint8_t rcv_msg);
 static uint8_t get_data(uint8_t rcv_msg);
+static uint32_t map_mod_freq_mult(uint8_t data);
 static uint8_t is_my_note_on_msg(uint8_t rcv_msg);
 static uint8_t is_my_note_off_msg(uint8_t rcv_msg);
 static uint8_t is_my_cc_chg_msg(uint8_t rcv_msg);
@@ -106,21 +108,31 @@ static void assemble_message(fpga_msg_t* fpga_msg, uint8_t msg_type, uint8_t dat
     fpga_msg->msg_type = msg_type;
 
     if (msg_type == NOTE_OFF_MSG){
+        fpga_msg->msg_type = 0;
         fpga_msg->data = 0;
     }
     else if (msg_type == NOTE_ON_MSG){
+        fpga_msg->msg_type = 1;
         fpga_msg->data = midi_to_phase_inc_arr[data1];
     }
     else if (msg_type == CTRL_CHG_MSG){
         /* first data message is a CC channel */
         if (data1 == CC_CHAN_VOLUME){
+            /* change output volume */
             fpga_msg->msg_type = 7;
             fpga_msg->data = (uint32_t) exp_volume_arr[data2];
         }
 
-        if (data1 == CC_CHAN_VOLUME){
-            fpga_msg->msg_type = 7;
-            fpga_msg->data = (uint32_t) exp_volume_arr[data2];
+        if (data1 == CC_MOD_DEPTH){
+            /* change depth of FM modulation (7-bit) */
+            fpga_msg->msg_type = 2;
+            fpga_msg->data = (uint32_t) data2;
+        }
+
+        if (data1 == CC_MOD_FREQ_MULT){
+            /* change depth of FM modulation (7-bit) */
+            fpga_msg->msg_type = 3;
+            fpga_msg->data = map_mod_freq_mult(data2);
         }
     }
 }
@@ -143,6 +155,13 @@ static uint8_t get_msg_kind(uint8_t rcv_msg)
 static uint8_t get_data(uint8_t rcv_msg)
 {
     return DATA_BIT_MASK & rcv_msg;
+}
+
+static uint32_t map_mod_freq_mult(uint8_t data)
+{
+
+    float f = (float) data;
+    return (uint32_t) (roundf(f/32));
 }
 
 static uint8_t is_my_note_on_msg(uint8_t rcv_msg)
