@@ -12,11 +12,14 @@ DEBUG = True
 
 BITS = 16
 MAX_VAL = 2**BITS - 1
-MIN_DB = -60
+MIN_DB = -70
 MAX_DB = 0
 
+# make curve less steep at the end (more consistant)
+GAMMA = 0.5
+
 x = np.arange(128)
-db = MIN_DB + (x / 127) * (MAX_DB - MIN_DB)
+db = MIN_DB + ((x / 127) ** GAMMA) * (MAX_DB - MIN_DB)
 
 # convert DB to linear
 amp = 10 ** (db / 20)
