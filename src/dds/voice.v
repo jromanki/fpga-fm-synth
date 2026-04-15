@@ -3,14 +3,14 @@ module voice(
     input rst,
     input tick,
     input [31:0] phase_inc,
-    input [31:0] mod_phase_inc,
+    input [2:0] mod_freq_mult_setting,
     input [6:0] mod_depth,
     input [15:0] volume_mult,
     output wire [31:0] value
 );
-
     wire signed [31:0] final_sample_out;
 
+    reg [31:0] mod_phase_inc;
     reg [11:0] sample_num;
     reg [31:0] phase_acc;
     wire signed [31:0] sample_out;
@@ -28,6 +28,40 @@ module voice(
             mod_phase_acc <= 0;
         end
         else begin
+            
+            /* assign chosen modulator freq */
+            case(mod_freq_mult_setting)
+
+                /* x1/2 of the frequency */
+                3'b000 : begin
+                    mod_phase_inc <= phase_inc >> 1;
+                end
+
+                /* x1 of the frequency */
+                3'b001 : begin
+                    mod_phase_inc <= phase_inc;
+                end
+
+                /* x3/2 of the frequency */
+                3'b010 : begin
+                    mod_phase_inc <= phase_inc + (phase_inc >> 1);
+                end
+
+                /* x2 of the frequency */
+                3'b011 : begin
+                    mod_phase_inc <= phase_inc << 1;
+                end
+                
+                /* x3 of the frequency */
+                3'b100 : begin
+                    mod_phase_inc <= phase_inc + (phase_inc << 1);
+                end
+
+                default : begin
+                    mod_phase_inc <= phase_inc;
+                end
+            endcase
+
             phase_acc <= phase_acc + phase_inc;
             mod_phase_acc <= mod_phase_acc + mod_phase_inc;
 
