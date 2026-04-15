@@ -12,13 +12,13 @@ module mixer (
     
 
     always @(posedge clk) begin
-        sum <= (a0 >>> 1) + (a1 >>> 1);
+        sum <= a0 + a1;
 
         // Use $signed(b) to ensure the multiplier treats the whole operation 
         // as a signed math problem.
         full_product <= sum * $signed({1'b0, b}); 
         
         // Scale back down (divide by 65536)
-        y <= full_product[47:16];
+        y <= full_product[48:17];
     end
 endmodule
