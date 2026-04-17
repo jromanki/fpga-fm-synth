@@ -1,0 +1,62 @@
+// Board details at
+// https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html
+
+// See examples here https://github.com/sipeed/TangNano-20K-example
+
+// =========== Outputs ===========
+
+// leds
+IO_LOC "led[5]" 20;
+IO_PORT "led[5]" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "led[4]" 19;
+IO_PORT "led[4]" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "led[3]" 18;
+IO_PORT "led[3]" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "led[2]" 17;
+IO_PORT "led[2]" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "led[1]" 16;
+IO_PORT "led[1]" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "led[0]" 15;
+IO_PORT "led[0]" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33;
+
+// clk
+IO_LOC "ext_clk"        4;
+IO_PORT "ext_clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE;
+
+// i2s
+IO_LOC "bck"            30;
+IO_PORT "bck" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+IO_LOC "sck"            31;
+IO_PORT "sck" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+IO_LOC "lrck"           26;
+IO_PORT "lrck" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+IO_LOC "dout"           29;
+IO_PORT "dout" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+// test
+IO_LOC "test_1"         76;
+IO_PORT "test_1" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+// =========== Inputs ===========
+
+// spi
+IO_LOC "mosi"           86;
+IO_PORT "mosi" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+IO_LOC "scl"            55;
+IO_PORT "scl" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+IO_LOC "cs"             48;
+IO_PORT "cs" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+// buttons
+IO_LOC "btn"            88;
+IO_PORT "btn" PULL_MODE=NONE;
+
+IO_LOC "btn2"           87;
+IO_PORT "btn2" PULL_MODE=NONE;
+
+
