@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "STM32 Debug",
+      "type": "cortex-debug",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      // "executable": "./build/${workspaceFolderBasename}.elf",
+      "executable": "./build/freertos-blink.elf",
+      "servertype": "openocd",
+      "device": "STM32F411CEU6",
+      "configFiles": [
+        "interface/stlink.cfg",
+        "target/stm32f4x.cfg"
+      ],
+      "svdFile": "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Include/STM32F401.svd",
+      "runToEntryPoint": "main"
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "cwd": "/home/jromanki/inz/blackpill-freertos-env/Core/Src",
+      "program": "/home/jromanki/inz/blackpill-freertos-env/Core/Src/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
