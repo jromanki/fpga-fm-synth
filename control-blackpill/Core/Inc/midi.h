@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define NUM_OF_VOICES                       1
+#define NUM_OF_VOICES                       2
 
 #define STATUS_BIT_MASK                     0x80
 #define STATUS_BIT_POS                      7

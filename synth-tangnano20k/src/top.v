@@ -28,8 +28,8 @@ module top #(
     reg [15:0] master_volume_mult;
     reg sync_tick_last;
     reg dac_ready;
-    reg [21:0] led_timer;
-    reg led_on;
+    reg [21:0] led_timer [1:0];
+    reg led_on [1:0];
 
     reg [31:0] sys_spi_data;
     reg [4:0] sys_spi_target_osc;
@@ -69,14 +69,19 @@ module top #(
         if (btn | auto_rst) begin
             sync_tick_last <= 0;
             dac_ready <= 0;
+            
+            osc_mod_freq_mult_setting <= 3'b000;
+            osc_mod_depth <= 7'b0000000;
+            master_volume_mult <= 16'hFFFF;
             sys_phase_inc[0] <= 0;
             sys_phase_inc[1] <= 0;
-            led_on <= 0;
-            led_timer <= 0;
-            master_volume_mult <= 16'hFFFF;
             osc_vol_mult[0] <= 16'hFFFF;
             osc_vol_mult[1] <= 16'hFFFF;
-            osc_mod_depth <= 7'b0000000;
+            led_timer[0] <= 0;
+            led_timer[1] <= 0;
+            led_on[0] <= 0;
+            led_on[1] <= 0;
+            
         end
         else begin
             if (note_msg_ready) begin
@@ -84,46 +89,46 @@ module top #(
                     /* note on message */
                     
                     /* assign phase incrementation to get correct freq */
-                    sys_phase_inc[0] <= sys_spi_data;
+                    sys_phase_inc[sys_spi_target_osc] <= sys_spi_data;
 
                     /* turn on the note sound output */
-                    osc_vol_mult[0] <= 16'hFFFF;
+                    osc_vol_mult[sys_spi_target_osc] <= 16'hFFFF;
 
                     /* signalize with led */
-                    led_timer <= 22'h3FFFFF;
-                    led_on <= 1;
+                    led_timer[sys_spi_target_osc] <= 22'h3FFFFF;
+                    led_on[sys_spi_target_osc] <= 1;
                 end
 
                 if (sys_spi_msg_type == 3'b000) begin
                     /* note off message */
 
                     /* turn off the note sound output */
-                    osc_vol_mult[0] <= 16'h0000;
+                    osc_vol_mult[sys_spi_target_osc] <= 16'h0000;
 
                     /* signalize with led */
-                    led_timer <= 22'h3FFFFF;
-                    led_on <= 1;
+                    led_timer[sys_spi_target_osc] <= 22'h3FFFFF;
+                    led_on[sys_spi_target_osc] <= 1;
                 end
 
                 if (sys_spi_msg_type == 3'b111) begin
                     /* volume change message */
                     master_volume_mult <= sys_spi_data[15:0];
-                    led_timer <= 22'h3FFFFF;
-                    led_on <= 1;
+                    led_timer[0] <= 22'h3FFFFF;
+                    led_on[0] <= 1;
                 end
 
                 if (sys_spi_msg_type == 3'b010) begin
                     /* change modulation depth message */
                     osc_mod_depth <= sys_spi_data[6:0];
-                    led_timer <= 22'h3FFFFF;
-                    led_on <= 1;
+                    led_timer[0] <= 22'h3FFFFF;
+                    led_on[0] <= 1;
                 end
 
                 if (sys_spi_msg_type == 3'b011) begin
                     /* change modulation frequency multiplier depth message */
                     osc_mod_freq_mult_setting <= sys_spi_data[2:0];
-                    led_timer <= 22'h3FFFFF;
-                    led_on <= 1;
+                    led_timer[0] <= 22'h3FFFFF;
+                    led_on[0] <= 1;
                 end
             end
             else if (btn2) begin
@@ -138,12 +143,20 @@ module top #(
                 data_r <= final_sample;
             end
 
-            if (led_timer > 0) begin
-                led_timer <= led_timer - 1;
-                led_on <= 1;
+            if (led_timer[0] > 0) begin
+                led_timer[0] <= led_timer[0] - 1;
+                led_on[0] <= 1;
             end
             else begin
-                led_on <= 0;
+                led_on[0] <= 0;
+            end
+
+            if (led_timer[1] > 0) begin
+                led_timer[1] <= led_timer[1] - 1;
+                led_on[1] <= 1;
+            end
+            else begin
+                led_on[1] <= 0;
             end
         end
     end
@@ -215,8 +228,9 @@ module top #(
     assign lrck = sys_lrck;
     assign dout = sys_dout;
 
-    assign led[0] = ~led_on;
-    assign led[5:1] = 5'b11111;
+    assign led[0] = ~led_on[0];
+    assign led[1] = ~led_on[1];
+    assign led[5:2] = 5'b1111;
 
     assign test_1 = note_msg_ready;
 
