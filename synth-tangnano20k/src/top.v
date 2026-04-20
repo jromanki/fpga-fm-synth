@@ -1,6 +1,8 @@
 module top #(
-    // Num of click cycle per led toggle.
-    parameter integer DIV = 100
+    /* Num of click cycles per L/R toggle. */
+    parameter integer DIV = 100,
+    /* Num of voices (also needs changes in mixer module) */
+    parameter integer VOICE_NUM = 4
 ) (
     input       ext_clk,
     input       btn,
@@ -28,8 +30,8 @@ module top #(
     reg [15:0] master_volume_mult;
     reg sync_tick_last;
     reg dac_ready;
-    reg [21:0] led_timer [1:0];
-    reg led_on [1:0];
+    reg [21:0] led_timer [5:0];
+    reg led_on [5:0];
 
     reg [31:0] sys_spi_data;
     reg [4:0] sys_spi_target_osc;
@@ -46,9 +48,12 @@ module top #(
     /* Per voice regs */
     reg [2:0]   osc_mod_freq_mult_setting;
     reg [7:0]   osc_mod_depth;
-    reg [31:0]  sys_phase_inc [1:0];
-    reg [15:0]  osc_vol_mult [1:0];
-    wire [31:0] sample [1:0];
+    reg [31:0]  sys_phase_inc [VOICE_NUM-1:0];
+    reg [15:0]  osc_vol_mult [VOICE_NUM-1:0];
+    wire [31:0] sample [VOICE_NUM-1:0];
+
+    /* for loops for code clarity */
+    integer i;
 
     /* simple power on reset */
     reg [15:0] por_counter = 0;
@@ -73,20 +78,27 @@ module top #(
             osc_mod_freq_mult_setting <= 3'b000;
             osc_mod_depth <= 7'b0000000;
             master_volume_mult <= 16'hFFFF;
-            sys_phase_inc[0] <= 0;
-            sys_phase_inc[1] <= 0;
-            osc_vol_mult[0] <= 16'hFFFF;
-            osc_vol_mult[1] <= 16'hFFFF;
-            led_timer[0] <= 0;
-            led_timer[1] <= 0;
-            led_on[0] <= 0;
-            led_on[1] <= 0;
+
+            /* clear led regs */
+            for (i = 0; i < 6; i = i + 1) begin
+                led_timer[i] <= 0;
+                led_on[i] <= 0;
+            end
+
+            /* clear per-voice setting regs */
+            for (i = 0; i < VOICE_NUM-1; i = i + 1) begin
+                sys_phase_inc[i] <= 0;
+                osc_vol_mult[i] <= 16'hFFFF;
+            end
+
             
         end
         else begin
             if (note_msg_ready) begin
+                /* If new spi message came */
+
                 if (sys_spi_msg_type == 3'b001) begin
-                    /* note on message */
+                    /* if note on message */
                     
                     /* assign phase incrementation to get correct freq */
                     sys_phase_inc[sys_spi_target_osc] <= sys_spi_data;
@@ -95,8 +107,10 @@ module top #(
                     osc_vol_mult[sys_spi_target_osc] <= 16'hFFFF;
 
                     /* signalize with led */
-                    led_timer[sys_spi_target_osc] <= 22'h3FFFFF;
-                    led_on[sys_spi_target_osc] <= 1;
+                    if (sys_spi_target_osc < 6) begin
+                        led_timer[sys_spi_target_osc] <= 22'h3FFFFF;
+                        led_on[sys_spi_target_osc] <= 1;
+                    end
                 end
 
                 if (sys_spi_msg_type == 3'b000) begin
@@ -106,8 +120,10 @@ module top #(
                     osc_vol_mult[sys_spi_target_osc] <= 16'h0000;
 
                     /* signalize with led */
-                    led_timer[sys_spi_target_osc] <= 22'h3FFFFF;
-                    led_on[sys_spi_target_osc] <= 1;
+                    if (sys_spi_target_osc < 6) begin
+                        led_timer[sys_spi_target_osc] <= 22'h3FFFFF;
+                        led_on[sys_spi_target_osc] <= 1;
+                    end
                 end
 
                 if (sys_spi_msg_type == 3'b111) begin
@@ -143,21 +159,17 @@ module top #(
                 data_r <= final_sample;
             end
 
-            if (led_timer[0] > 0) begin
-                led_timer[0] <= led_timer[0] - 1;
-                led_on[0] <= 1;
-            end
-            else begin
-                led_on[0] <= 0;
+            /* blink leds for a short time if led_on was set */ 
+            for (i = 0; i < 6; i = i + 1) begin
+                if (led_timer[i] > 0) begin
+                    led_timer[i] <= led_timer[i] - 1;
+                    led_on[i] <= 1;
+                end
+                else begin
+                    led_on[i] <= 0;
+                end
             end
 
-            if (led_timer[1] > 0) begin
-                led_timer[1] <= led_timer[1] - 1;
-                led_on[1] <= 1;
-            end
-            else begin
-                led_on[1] <= 0;
-            end
         end
     end
 
@@ -181,6 +193,9 @@ module top #(
         .msg_type_out(sys_spi_msg_type)
     );
 
+
+    /* Voice instances */
+
     voice voice0 (
         .clk(sys_clk),
         .rst(btn),
@@ -203,13 +218,95 @@ module top #(
         .value(sample[1])
     );
 
+    voice voice2 (
+        .clk(sys_clk),
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[2]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[2]),
+        .value(sample[2])
+    );
+
+    voice voice3 (
+        .clk(sys_clk),
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[3]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[3]),
+        .value(sample[3])
+    );
+
+    // voice voice4 (
+    //     .clk(sys_clk),
+    //     .rst(btn),
+    //     .tick(sys_sync_tick),
+    //     .phase_inc(sys_phase_inc[4]),
+    //     .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+    //     .mod_depth(osc_mod_depth),
+    //     .volume_mult(osc_vol_mult[4]),
+    //     .value(sample[4])
+    // );
+
+    // voice voice5 (
+    //     .clk(sys_clk),
+    //     .rst(btn),
+    //     .tick(sys_sync_tick),
+    //     .phase_inc(sys_phase_inc[5]),
+    //     .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+    //     .mod_depth(osc_mod_depth),
+    //     .volume_mult(osc_vol_mult[5]),
+    //     .value(sample[5])
+    // );
+
+    // voice voice6 (
+    //     .clk(sys_clk),
+    //     .rst(btn),
+    //     .tick(sys_sync_tick),
+    //     .phase_inc(sys_phase_inc[6]),
+    //     .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+    //     .mod_depth(osc_mod_depth),
+    //     .volume_mult(osc_vol_mult[6]),
+    //     .value(sample[6])
+    // );
+
+    // voice voice7 (
+    //     .clk(sys_clk),
+    //     .rst(btn),
+    //     .tick(sys_sync_tick),
+    //     .phase_inc(sys_phase_inc[7]),
+    //     .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+    //     .mod_depth(osc_mod_depth),
+    //     .volume_mult(osc_vol_mult[7]),
+    //     .value(sample[7])
+    // );
+
     mixer master_mixer (
         .clk(sys_clk),
         .a0(sample[0]),
         .a1(sample[1]),
+        .a2(sample[2]),
+        .a3(sample[3]),
         .b(master_volume_mult),
         .y(final_sample)
     );
+
+    // mixer master_mixer (
+    //     .clk(sys_clk),
+    //     .a0(sample[0]),
+    //     .a1(sample[1]),
+    //     .a2(sample[2]),
+    //     .a3(sample[3]),
+    //     .a4(sample[4]),
+    //     .a5(sample[5]),
+    //     .a6(sample[6]),
+    //     .a7(sample[7]),
+    //     .b(master_volume_mult),
+    //     .y(final_sample)
+    // );
 
     i2s_transmit i2s (
         .clk(sys_clk),
@@ -230,7 +327,10 @@ module top #(
 
     assign led[0] = ~led_on[0];
     assign led[1] = ~led_on[1];
-    assign led[5:2] = 5'b1111;
+    assign led[2] = ~led_on[2];
+    assign led[3] = ~led_on[3];
+    assign led[4] = ~led_on[4];
+    assign led[5] = ~led_on[5];
 
     assign test_1 = note_msg_ready;
 

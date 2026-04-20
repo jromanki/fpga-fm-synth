@@ -191,7 +191,7 @@ static int8_t assign_voice_note_off(uint8_t midi_note)
     for (int i=0; i<NUM_OF_VOICES; i++) {
  
         /* if found voice playing midi_note currently */
-        if (voices[i].note_value == midi_note) {
+        if (voices[i].note_value == midi_note && voices[i].active) {
             /* mark voice as free */
             voices[i].active = false;
  
@@ -207,6 +207,15 @@ static uint8_t assign_voice_note_on(uint8_t midi_note)
 {
     uint8_t target_voice_idx = 255;
  
+    /* Check for retrigger */
+    for (int i = 0; i < NUM_OF_VOICES; i++) {
+        if (voices[i].active && voices[i].note_value == midi_note) {
+            /* Use this voice again */
+            target_voice_idx = i;
+            break;
+        }
+    }
+
     /* find free voice */
     for (int i = 0; i < NUM_OF_VOICES; i++) {
         if (!voices[i].active){

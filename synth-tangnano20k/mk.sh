@@ -18,7 +18,7 @@ src/spi/spi_module.v"
 OUT_DIR=build
 SERIAL_NUM=2025012315
 
-yosys -p "read_verilog $SRC_FILES; synth_gowin -json $OUT_DIR/top-synth.json -family gw2a" > build/yosys-log.txt
+yosys -p "read_verilog $SRC_FILES; synth_gowin -json $OUT_DIR/top-synth.json -family gw2a" #> build/yosys-log.txt
 nextpnr-himbaechel -v --debug --json $OUT_DIR/top-synth.json --write $OUT_DIR/top.json --device GW2AR-LV18QN88C8/I7 --vopt family=GW2A-18C --vopt cst=pinout.cst > build/nextpnr-log.txt 2>&1
 gowin_pack -d GW2A-18C -o $OUT_DIR/top.fs $OUT_DIR/top.json
 echo "build succesfull! see logs in build/"
