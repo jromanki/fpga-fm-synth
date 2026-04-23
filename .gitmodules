@@ -1,0 +1,3 @@
+[submodule "hardware/fpga-fm-synth-kicad/kicad-libs/kicad_blackpill"]
+	path = hardware/fpga-fm-synth-kicad/kicad-libs/kicad_blackpill
+	url = https://github.com/riskable/kicad_blackpill.git
