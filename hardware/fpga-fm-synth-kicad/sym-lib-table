@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "blackpill") (type "KiCad") (uri "${KIPRJMOD}/kicad-libs/kicad_blackpill") (options "") (descr ""))
+)

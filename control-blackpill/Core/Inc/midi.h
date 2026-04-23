@@ -40,5 +40,6 @@ typedef struct {
 } fpga_msg_t;
 
 void process_midi(uint8_t rcv_msg);
+void display_freq_mult(uint8_t freq_mult);
 
 #endif

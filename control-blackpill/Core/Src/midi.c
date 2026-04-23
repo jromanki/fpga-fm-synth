@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdbool.h>
 
+#include "main.h"
 #include "midi.h"
 #include "cmsis_os.h"
 
@@ -24,6 +25,7 @@ voice_t voices[NUM_OF_VOICES];
 static volatile enum msg_state current_state = STATE_IDLE;
 static volatile uint8_t msg_type;
 static volatile uint8_t first_data_msg;
+static volatile uint8_t last_freq_mult;
 extern osMessageQueueId_t to_send_queueHandle;
 
 /* ======================== STATIC FUNCTIONS DECLARATIONS ======================== */
@@ -54,8 +56,31 @@ static uint32_t map_mod_freq_mult(uint8_t data);
 static uint8_t is_my_note_on_msg(uint8_t rcv_msg);
 static uint8_t is_my_note_off_msg(uint8_t rcv_msg);
 static uint8_t is_my_cc_chg_msg(uint8_t rcv_msg);
+void display_freq_mult(uint8_t freq_mult);
 
 /* ======================== GLOBAL FUNCTIONS DEFINITIONS ======================== */
+
+void display_freq_mult(uint8_t freq_mult)
+{
+    uint16_t mask = 0;
+    uint8_t program = freq_mult + 1;
+
+    if (program & 0x01) {
+        mask |= GPIO_PIN_10;
+    }
+    if (program & 0x02) {
+        mask |= GPIO_PIN_2;
+    }
+    if (program & 0x04) {
+        mask |= GPIO_PIN_1;
+    }
+
+    HAL_GPIO_WritePin(GPIOB,
+        GPIO_PIN_10 | GPIO_PIN_2 | GPIO_PIN_1,
+        GPIO_PIN_RESET);
+
+    HAL_GPIO_WritePin(GPIOB, mask, GPIO_PIN_SET);
+}
 
 void process_midi(uint8_t rcv_msg)
 {
@@ -176,8 +201,15 @@ static uint8_t assemble_message(fpga_msg_t* fpga_msg, uint8_t msg_type, uint8_t 
 
         if (data1 == CC_MOD_FREQ_MULT){
             /* change depth of FM modulation (7-bit) */
+            uint8_t freq_mult = map_mod_freq_mult(data2);
+
+            if (freq_mult != last_freq_mult) {
+                display_freq_mult(freq_mult);
+                last_freq_mult = freq_mult;
+            }
+
             fpga_msg->msg_type = 3;
-            fpga_msg->data = map_mod_freq_mult(data2);
+            fpga_msg->data = freq_mult;
         }
     }
 

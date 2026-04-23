@@ -70,14 +70,14 @@ osThreadId_t transmit_spiHandle;
 const osThreadAttr_t transmit_spi_attributes = {
   .name = "transmit_spi",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for process_midi */
 osThreadId_t process_midiHandle;
 const osThreadAttr_t process_midi_attributes = {
   .name = "process_midi",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for midi_queue */
 osMessageQueueId_t midi_queueHandle;

@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "midi.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,8 +96,9 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   /* start receiving interrupts */
-  HAL_UART_Receive_IT (&huart2, &rx_buffer, 1);
-
+  HAL_UART_Receive_IT(&huart2, &rx_buffer, 1);
+  /* Make leds show default freq mult (1/2 carrier f)*/
+  display_freq_mult(0);
   /* USER CODE END 2 */
 
   /* Init scheduler */
