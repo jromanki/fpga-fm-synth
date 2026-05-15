@@ -51,7 +51,6 @@ static int8_t assign_voice_note_off(uint8_t midi_note);
 
 static uint8_t get_channel(uint8_t rcv_msg);
 static uint8_t get_msg_kind(uint8_t rcv_msg);
-static uint8_t get_data(uint8_t rcv_msg);
 static uint32_t map_mod_freq_mult(uint8_t data);
 static uint8_t is_my_note_on_msg(uint8_t rcv_msg);
 static uint8_t is_my_note_off_msg(uint8_t rcv_msg);
@@ -297,16 +296,12 @@ static uint8_t get_msg_kind(uint8_t rcv_msg)
     return ((MSG_KIND_BIT_MASK & rcv_msg) >> MSG_KIND_BIT_POS);
 }
 
-static uint8_t get_data(uint8_t rcv_msg)
-{
-    return DATA_BIT_MASK & rcv_msg;
-}
-
 static uint32_t map_mod_freq_mult(uint8_t data)
 {
-
-    float f = (float) data;
-    return (uint32_t) (roundf(f/32));
+    /* divide by 128 */
+    uint32_t v = (data * 7) >> 7;  
+    if (v > 6) v = 6;
+    return v;
 }
 
 static uint8_t is_my_note_on_msg(uint8_t rcv_msg)

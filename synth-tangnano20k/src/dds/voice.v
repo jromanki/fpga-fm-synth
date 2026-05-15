@@ -19,6 +19,16 @@ module voice(
     reg [31:0] mod_phase_acc;
     wire signed [31:0] mod_sample_out;
 
+    wire [31:0] pi_sum_internal;
+    wire signed [31:0] phi_sum_internal;
+
+    /* approximate Pi as: (2^1 + 2^0 + 2^-3 + 2^-6 + 2^-9 + 2^-12) */
+    /* approximate Phi (golden ratio) as: (2^0 + 2^-1 + 2^-3 - 2^-7) */
+    assign pi_sum_internal = (phase_inc << 1) + phase_inc + (phase_inc >>> 3) + 
+                             (phase_inc >>> 6) + (phase_inc >>> 9) + (phase_inc >>> 12);
+
+    assign phi_sum_internal = phase_inc + (phase_inc >>> 1) + (phase_inc >>> 3) - (phase_inc >>> 7);
+
     always @ (posedge clk) begin
 
         if (rst) begin
@@ -32,14 +42,14 @@ module voice(
             /* assign chosen modulator freq */
             case(mod_freq_mult_setting)
 
-                /* x1/2 of the frequency */
+                /* x1 of the frequency */
                 3'b000 : begin
-                    mod_phase_inc <= phase_inc >> 1;
+                    mod_phase_inc <= phase_inc;
                 end
 
-                /* x1 of the frequency */
+                /* x1/2 of the frequency */
                 3'b001 : begin
-                    mod_phase_inc <= phase_inc;
+                    mod_phase_inc <= phase_inc >> 1;
                 end
 
                 /* x3/2 of the frequency */
@@ -57,6 +67,16 @@ module voice(
                     mod_phase_inc <= phase_inc + (phase_inc << 1);
                 end
 
+                /* phi/1 (golden ratio) of the frequency */
+                3'b101 : begin
+                    mod_phase_inc <= phi_sum_internal;
+                end
+
+                /* pi/1 of the frequency */
+                3'b110 : begin
+                    mod_phase_inc <= pi_sum_internal;
+                end
+                
                 default : begin
                     mod_phase_inc <= phase_inc;
                 end
