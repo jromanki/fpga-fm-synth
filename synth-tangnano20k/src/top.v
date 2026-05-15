@@ -2,7 +2,7 @@ module top #(
     /* Num of click cycles per L/R toggle. */
     parameter integer DIV = 100,
     /* Num of voices (also needs changes in mixer module) */
-    parameter integer VOICE_NUM = 4
+    parameter integer VOICE_NUM = 10
 ) (
     input       ext_clk,
     input       btn,
@@ -240,58 +240,70 @@ module top #(
         .value(sample[3])
     );
 
-    // voice voice4 (
-    //     .clk(sys_clk),
-    //     .rst(btn),
-    //     .tick(sys_sync_tick),
-    //     .phase_inc(sys_phase_inc[4]),
-    //     .mod_freq_mult_setting(osc_mod_freq_mult_setting),
-    //     .mod_depth(osc_mod_depth),
-    //     .volume_mult(osc_vol_mult[4]),
-    //     .value(sample[4])
-    // );
-
-    // voice voice5 (
-    //     .clk(sys_clk),
-    //     .rst(btn),
-    //     .tick(sys_sync_tick),
-    //     .phase_inc(sys_phase_inc[5]),
-    //     .mod_freq_mult_setting(osc_mod_freq_mult_setting),
-    //     .mod_depth(osc_mod_depth),
-    //     .volume_mult(osc_vol_mult[5]),
-    //     .value(sample[5])
-    // );
-
-    // voice voice6 (
-    //     .clk(sys_clk),
-    //     .rst(btn),
-    //     .tick(sys_sync_tick),
-    //     .phase_inc(sys_phase_inc[6]),
-    //     .mod_freq_mult_setting(osc_mod_freq_mult_setting),
-    //     .mod_depth(osc_mod_depth),
-    //     .volume_mult(osc_vol_mult[6]),
-    //     .value(sample[6])
-    // );
-
-    // voice voice7 (
-    //     .clk(sys_clk),
-    //     .rst(btn),
-    //     .tick(sys_sync_tick),
-    //     .phase_inc(sys_phase_inc[7]),
-    //     .mod_freq_mult_setting(osc_mod_freq_mult_setting),
-    //     .mod_depth(osc_mod_depth),
-    //     .volume_mult(osc_vol_mult[7]),
-    //     .value(sample[7])
-    // );
-
-    mixer master_mixer (
+    voice voice4 (
         .clk(sys_clk),
-        .a0(sample[0]),
-        .a1(sample[1]),
-        .a2(sample[2]),
-        .a3(sample[3]),
-        .b(master_volume_mult),
-        .y(final_sample)
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[4]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[4]),
+        .value(sample[4])
+    );
+
+    voice voice5 (
+        .clk(sys_clk),
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[5]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[5]),
+        .value(sample[5])
+    );
+
+    voice voice6 (
+        .clk(sys_clk),
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[6]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[6]),
+        .value(sample[6])
+    );
+
+    voice voice7 (
+        .clk(sys_clk),
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[7]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[7]),
+        .value(sample[7])
+    );
+
+    voice voice8 (
+        .clk(sys_clk),
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[8]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[8]),
+        .value(sample[8])
+    );
+
+    voice voice9 (
+        .clk(sys_clk),
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[9]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[9]),
+        .value(sample[9])
     );
 
     // mixer master_mixer (
@@ -300,13 +312,25 @@ module top #(
     //     .a1(sample[1]),
     //     .a2(sample[2]),
     //     .a3(sample[3]),
-    //     .a4(sample[4]),
-    //     .a5(sample[5]),
-    //     .a6(sample[6]),
-    //     .a7(sample[7]),
     //     .b(master_volume_mult),
     //     .y(final_sample)
     // );
+
+    mixer master_mixer (
+        .clk(sys_clk),
+        .a0(sample[0]),
+        .a1(sample[1]),
+        .a2(sample[2]),
+        .a3(sample[3]),
+        .a4(sample[4]),
+        .a5(sample[5]),
+        .a6(sample[6]),
+        .a7(sample[7]),
+        .a8(sample[8]),
+        .a9(sample[9]),
+        .b(master_volume_mult),
+        .y(final_sample)
+    );
 
     i2s_transmit i2s (
         .clk(sys_clk),
