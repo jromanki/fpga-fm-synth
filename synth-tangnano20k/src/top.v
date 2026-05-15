@@ -2,7 +2,7 @@ module top #(
     /* Num of click cycles per L/R toggle. */
     parameter integer DIV = 100,
     /* Num of voices (also needs changes in mixer module) */
-    parameter integer VOICE_NUM = 8
+    parameter integer VOICE_NUM = 10
 ) (
     input       ext_clk,
     input       btn,
@@ -284,6 +284,28 @@ module top #(
         .value(sample[7])
     );
 
+    voice voice8 (
+        .clk(sys_clk),
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[8]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[8]),
+        .value(sample[8])
+    );
+
+    voice voice9 (
+        .clk(sys_clk),
+        .rst(btn),
+        .tick(sys_sync_tick),
+        .phase_inc(sys_phase_inc[9]),
+        .mod_freq_mult_setting(osc_mod_freq_mult_setting),
+        .mod_depth(osc_mod_depth),
+        .volume_mult(osc_vol_mult[9]),
+        .value(sample[9])
+    );
+
     // mixer master_mixer (
     //     .clk(sys_clk),
     //     .a0(sample[0]),
@@ -304,6 +326,8 @@ module top #(
         .a5(sample[5]),
         .a6(sample[6]),
         .a7(sample[7]),
+        .a8(sample[8]),
+        .a9(sample[9]),
         .b(master_volume_mult),
         .y(final_sample)
     );
