@@ -27,6 +27,6 @@ module mixer (
         full_product <= sum * $signed({1'b0, b}); 
         
         // Scale back down
-        y <= full_product[51:20] + (full_product[51:20] >>> 1);
+        y <= full_product[51:20];
     end
 endmodule
