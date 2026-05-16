@@ -8,7 +8,7 @@
       "internal_id": "",
       "mfg": "",
       "mpn": "",
-      "sch_revision": ""
+      "sch_revision": "0.1"
     },
     "layer_pairs": [],
     "layer_presets": [],
@@ -404,7 +404,7 @@
     "meta": {
       "version": 1
     },
-    "page_layout_descr_file": "",
+    "page_layout_descr_file": "kicad-embed://minial.kicad_wks",
     "plot_directory": "",
     "reuse_designators": true,
     "subpart_first_id": 65,
@@ -416,7 +416,7 @@
         "uuid": "4c52c7f1-4c82-4635-96da-e224672d2823"
       }
     ],
-    "used_designators": "R1-2,D1,J1-3,U1-3",
+    "used_designators": "",
     "variants": []
   },
   "sheets": [
