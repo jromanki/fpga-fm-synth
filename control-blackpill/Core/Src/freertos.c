@@ -38,14 +38,11 @@ struct out_spi_msg_t{
   uint8_t msg_type;
 };
 
-volatile uint8_t note_pressed_recently = 0;
-volatile uint8_t note_led_waiting = 0;
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define FLAG_MIDI_RECEIVED  0x0001
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -176,21 +173,20 @@ void MX_FREERTOS_Init(void) {
 void start_blink_01(void *argument)
 {
   /* USER CODE BEGIN start_blink_01 */
+  uint32_t active_flags;
+
   /* Infinite loop */
   for(;;)
   {
-    if (note_pressed_recently){
-      note_pressed_recently = 0;
-      note_led_waiting = 1;
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
-      osDelay(20);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
-      note_led_waiting = 1;
+    active_flags = osThreadFlagsWait(FLAG_MIDI_RECEIVED, osFlagsWaitAny, osWaitForever);
+
+    if ((active_flags & osFlagsError) == 0) {
+      if (active_flags & FLAG_MIDI_RECEIVED) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
+        osDelay(20);
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
+      }
     }
-    if (note_led_waiting == 0){
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
-    }
-    osDelay(1);
   }
   /* USER CODE END start_blink_01 */
 }
@@ -223,7 +219,7 @@ void transmit_spi_01(void *argument)
       HAL_SPI_Transmit_DMA(&hspi1, frames, 5);
 
       /* Notify with led */
-      note_pressed_recently = 1;
+      osThreadFlagsSet(blink01Handle, FLAG_MIDI_RECEIVED);
     }
   }
   /* USER CODE END transmit_spi_01 */

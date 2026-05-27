@@ -6,9 +6,9 @@
 #include "cmsis_os.h"
 
 enum msg_state {
-    STATE_IDLE,
-    STATE_STATUS,
-    STATE_DATA
+    STATE_WAITING_STATUS,
+    STATE_WAITING_DATA_1,
+    STATE_WAITING_DATA_2
 };
  
 typedef struct {
@@ -18,11 +18,11 @@ typedef struct {
 } voice_t;
  
 
-uint32_t midi_to_phase_inc_arr[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 709, 752, 796, 844, 894, 947, 1003, 1063, 1126, 1193, 1264, 1339, 1419, 1503, 1593, 1687, 1788, 1894, 2006, 2126, 2252, 2386, 2528, 2678, 2838, 3006, 3185, 3374, 3575, 3788, 4013, 4252, 4504, 4772, 5056, 5357, 5675, 6013, 6370, 6749, 7150, 7575, 8026, 8503, 9009, 9544, 10112, 10713, 11350, 12025, 12740, 13498, 14300, 15151, 16052, 17006, 18017, 19089, 20224, 21426, 22700, 24050, 25480, 26996, 28601, 30301, 32103, 34012, 36035, 38177, 40448, 42853, 45401, 48101, 50961, 53991, 57202, 60603, 64207, 68025, 72070, 76355, 80895, 85706, 90802, 96201, 101922, 107982, 114403, 121206, 128413, 136049, 144139, 152710, 161791, 171411, 181604, 192402, 203843, 215964, 228806, 242412, 256827, 272098, 288278, 305420, 323581, 342822 };
+uint32_t midi_to_phase_inc_arr[] = { 709, 752, 796, 844, 894, 947, 1003, 1063, 1126, 1193, 1264, 1339, 1419, 1503, 1593, 1687, 1788, 1894, 2006, 2126, 2252, 2386, 2528, 2678, 2838, 3006, 3185, 3374, 3575, 3788, 4013, 4252, 4504, 4772, 5056, 5357, 5675, 6013, 6370, 6749, 7150, 7575, 8026, 8503, 9009, 9544, 10112, 10713, 11350, 12025, 12740, 13498, 14300, 15151, 16052, 17006, 18017, 19089, 20224, 21426, 22700, 24050, 25480, 26996, 28601, 30301, 32103, 34012, 36035, 38177, 40448, 42853, 45401, 48101, 50961, 53991, 57202, 60603, 64207, 68025, 72069, 76355, 80895, 85706, 90802, 96201, 101922, 107982, 114403, 121206, 128413, 136049, 144139, 152710, 161791, 171411, 181604, 192402, 203843, 215964, 228806, 242412, 256826, 272098, 288278, 305420, 323581, 342822, 363208, 384805, 407687, 431929, 457613, 484824, 513653, 544196, 576556, 610840, 647162, 685644, 726415, 769610, 815373, 863858, 915226, 969648, 1027306, 1088393 };
 uint16_t exp_volume_arr[] = { 0, 42, 57, 72, 87, 103, 119, 137, 157, 177, 199, 222, 247, 273, 301, 331, 362, 395, 431, 468, 507, 549, 593, 640, 689, 740, 795, 852, 912, 975, 1041, 1111, 1184, 1261, 1341, 1425, 1513, 1606, 1702, 1803, 1909, 2019, 2134, 2254, 2380, 2511, 2648, 2790, 2939, 3094, 3255, 3423, 3598, 3780, 3969, 4166, 4371, 4584, 4806, 5036, 5274, 5523, 5780, 6048, 6325, 6613, 6912, 7222, 7543, 7876, 8221, 8579, 8949, 9333, 9731, 10142, 10568, 11009, 11466, 11938, 12426, 12931, 13454, 13994, 14553, 15130, 15726, 16343, 16979, 17637, 18317, 19018, 19742, 20490, 21262, 22059, 22881, 23729, 24604, 25507, 26438, 27398, 28387, 29408, 30460, 31544, 32662, 33813, 34999, 36222, 37481, 38778, 40113, 41489, 42905, 44363, 45863, 47408, 48998, 50634, 52318, 54050, 55832, 57665, 59551, 61490, 63484, 65535 };
 voice_t voices[NUM_OF_VOICES];
 
-static volatile enum msg_state current_state = STATE_IDLE;
+static volatile enum msg_state current_state = STATE_WAITING_STATUS;
 static volatile uint8_t msg_type;
 static volatile uint8_t first_data_msg;
 static volatile uint8_t last_freq_mult;
@@ -90,25 +90,25 @@ void process_midi(uint8_t rcv_msg)
 
         if (is_my_note_on_msg(rcv_msg)) {
             /* is a note on message */
-            current_state = STATE_STATUS;
+            current_state = STATE_WAITING_DATA_1;
         }
         else if (is_my_note_off_msg(rcv_msg)) {
             /* is a note off message */
-            current_state = STATE_STATUS;
+            current_state = STATE_WAITING_DATA_1;
         }
         else if (is_my_cc_chg_msg(rcv_msg)) {
             /* is a control change message */
-            current_state = STATE_STATUS;
+            current_state = STATE_WAITING_DATA_1;
         }
         else {
-            current_state = STATE_IDLE;
+            current_state = STATE_WAITING_STATUS;
         }
     }
     else {
         uint8_t data = rcv_msg; 
 
         switch (current_state) {
-            case STATE_STATUS:
+            case STATE_WAITING_DATA_1:
                 /* is a first data message of supported status message */
                 first_data_msg = data;
 
@@ -124,10 +124,10 @@ void process_midi(uint8_t rcv_msg)
                     osMessageQueuePut(to_send_queueHandle, &fpga_msg, 0, 10);
                 }
                 
-                current_state = STATE_DATA;
+                current_state = STATE_WAITING_DATA_2;
                 break;
 
-            case STATE_DATA:
+            case STATE_WAITING_DATA_2:
                 /* is a 2nd data message of supported status message */
                 if (msg_type == CTRL_CHG_MSG) {
                     fpga_msg_t fpga_msg;
